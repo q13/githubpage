@@ -9,6 +9,9 @@
         "type": "git",
         "url": "git@github.com:q13/githubpage.git"
     },
+    "bin":{
+        "githubpage":"./bin/githubpage.js"
+    },
     "dependencies": {
         "metamd": "0.3.0",
         "ejs":"0.8.3",
