@@ -614,10 +614,10 @@ var core={
         fs.writeFileSync(checksumPath,JSON.stringify(checksum),"utf8");
     },
     getDocEl:function(htmlStr){
-        return $(htmlStr.replace('<script','<!--%%%<script').replace('</script>','</script>%%%-->'));    
+        return $(htmlStr.replace(/<script/gi,'<!--%%%<script').replace(/<\/script>/gi,'</script>%%%-->'));    
     },
     getDocHtmlStr:function(docEl){
-        return docEl.html().replace('<!--%%%<script','<script').replace('</script>%%%-->','</script>');    
+        return docEl.html().replace(/<!--%%%<script/gi,'<script').replace(/<\/script>%%%-->/gi,'</script>');    
     }
 };
 
