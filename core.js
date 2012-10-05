@@ -23,7 +23,8 @@ var core={
      */
     preConfig:function(basePath){
         var todayDirName=moment().format("YYYY-MM-DD");
-        var layoutContent;
+        var layoutContent,
+            indexTpl;   //首页模板
         var files={
                 "dir":["source","source/"+todayDirName,"published","published/pages","published/pages/"+todayDirName,"published/cates","published/tags","published/theme"],
                 "file":["cate.json","tag.json","published/index.html","checksum.json"]
@@ -35,7 +36,8 @@ var core={
             "BASE":"/",
             "THEME":"",
             "CATES":"/cates",
-            "TAGS":"/tags"
+            "TAGS":"/tags",
+            "PAGES":"/pages"
         };
         //创建config.json
         if(!fs.existsSync(configPath)){
@@ -49,6 +51,12 @@ var core={
         utils.mix(config,serverHref);
         //创建预设dir和file
         layoutContent=fs.readFileSync(tplPath+'/'+config.theme+"/layout.ejs","utf8");
+        //用indexTpl模板构建index页面
+        if(fs.existsSync(tplPath+'/'+config.theme+"/index.ejs")){
+            indexTpl=fs.readFileSync(tplPath+'/'+config.theme+"/index.ejs","utf8");    
+        }else{
+            indexTpl=layoutContent;   
+        }
         files.dir.forEach(function(v,i){
             var dirPath= basePath+'/'+v;
             if(!fs.existsSync(dirPath)){
@@ -62,7 +70,7 @@ var core={
                 if(v=="cate.json"||v=="tag.json"){
                     fileContent='{"items":[]}';
                 }else if(v=="published/index.html"){
-                    fileContent=ejs.render(layoutContent, {
+                    fileContent=ejs.render(indexTpl, {
                         page:{
                             content:'<ul id="page-list"></ul>',
                             tag:"&nbsp;",
@@ -91,7 +99,10 @@ var core={
     },
     archive:function(basePath,pageMds){
         var config,
-            layoutContent,
+            layoutContent,  //默认模板
+            pageTpl,    //page模板
+            cateTpl,    //分类模板
+            tagTpl, //标签模板
             metaTplData={
                 "cate":null,
                 "tag":null
@@ -120,9 +131,26 @@ var core={
         }
         //pre config
         config=core.preConfig(basePath);
-        //生成html输出
-        //layoutContent=fs.readFileSync(tplPath+'/'+config.theme+"/layout.html","utf8");
+        //输出模板
         layoutContent=fs.readFileSync(tplPath+'/'+config.theme+"/layout.ejs","utf8");
+         //用pageTpl模板构建page页面
+        if(fs.existsSync(tplPath+'/'+config.theme+"/page.ejs")){
+            pageTpl=fs.readFileSync(tplPath+'/'+config.theme+"/page.ejs","utf8");    
+        }else{
+            pageTpl=layoutContent;   
+        }
+        //用cateTpl模板构建cate页面
+        if(fs.existsSync(tplPath+'/'+config.theme+"/cate.ejs")){
+            cateTpl=fs.readFileSync(tplPath+'/'+config.theme+"/cate.ejs","utf8");    
+        }else{
+            cateTpl=layoutContent;   
+        }
+        //用tagTpl模板构建tag页面
+        if(fs.existsSync(tplPath+'/'+config.theme+"/tag.ejs")){
+            tagTpl=fs.readFileSync(tplPath+'/'+config.theme+"/tag.ejs","utf8");    
+        }else{
+            tagTpl=layoutContent;   
+        }
         metaTplData.cate=JSON.parse(fs.readFileSync(basePath+'/'+"cate.json","utf8"));
         metaTplData.tag=JSON.parse(fs.readFileSync(basePath+'/'+"tag.json","utf8"));
         pageMds.forEach(function(pagePath){
@@ -141,6 +169,9 @@ var core={
                 tagDocEl,
                 indexDocEl;
             var archMdPath;
+            //page summary template
+            var pageSummaryTpl='<li pageid="'+pageId+'"><h3 class="page-title"><a href="'+config.PAGES+'/'+todayDirName+'/'+pageName+'.html'+'">'+pageMeta.title+'</a></h3><div class="page-summary">'+pageMeta.summary+'</div></li>';
+            
             var curReadyPages=utils.getAllFiles(basePath+'/published/pages');   //现有的page
             curReadyPages=curReadyPages.concat(utils.getAllFiles(catePath));   //add cates
             curReadyPages=curReadyPages.concat(utils.getAllFiles(tagPath));    //add tags
@@ -159,14 +190,20 @@ var core={
                 tagChanged=true;
             }
             metaTplData.cate.items.forEach(function(item){
-                cateStr+='<li cateid="'+item+'"><a href="'+config.CATES+'/'+item+'.html">'+item+'</a></li>';
+                //filter掉default category
+                if(item!="default"){
+                    cateStr+='<li cateid="'+item+'"><a href="'+config.CATES+'/'+item+'.html">'+item+'</a></li>';  
+                }
             });
             cateStr='<ul id="cate-list">'+cateStr+'</ul>';
             metaTplData.tag.items.forEach(function(item){
-                tagStr+='<li tagid="'+item+'"><a href="'+config.TAGS+'/'+item+'.html">'+item+'</a></li>';
+                //filter掉default tag
+                if(item!="default"){
+                    tagStr+='<li tagid="'+item+'"><a href="'+config.TAGS+'/'+item+'.html">'+item+'</a></li>';
+                }
             });
             tagStr='<ul id="tag-list">'+tagStr+'</ul>';
-            pageRenderStr=ejs.render(layoutContent, {
+            pageRenderStr=ejs.render(pageTpl, {
                 page:{
                     content:pageContent,
                     tag:tagStr,
@@ -185,19 +222,6 @@ var core={
             if(cateChanged||tagChanged){
                 //替换现有的html cate或tag部分
                 curReadyPages.forEach(function(curReadyPage){
-                    /*jsdom.env({
-                        html: curReadyPage,
-                        scripts: [],
-                        done: function(errors, win) {
-                            if(cateChanged){
-                                win.document.getElementById("page-cate").innerHTML= cateStr;
-                            }
-                            if(tagChanged){
-                                win.document.getElementById("page-tag").innerHTML= tagStr;
-                            }
-                            fs.writeFileSync(curReadyPage,win.document.innerHTML,"utf8");
-                        }
-                    });*/
                     //var docEl=$(fs.readFileSync(curReadyPage,"utf8"));
                     var docEl=core.getDocEl(fs.readFileSync(curReadyPage,"utf8"));
                     //重新设置cate
@@ -214,9 +238,9 @@ var core={
             }
             //生成新的cate或更新现有cate索引文件
             if(cateChanged){
-                pageRenderStr=ejs.render(layoutContent, {
+                pageRenderStr=ejs.render(cateTpl, {
                     page:{
-                        content:'<ul id="page-list"><li pageid="'+pageId+'">'+pageMeta.summary+'</li></ul>',
+                        content:'<ul id="page-list">'+pageSummaryTpl+'</ul>',
                         tag:tagStr,
                         cate:cateStr
                     },
@@ -227,16 +251,16 @@ var core={
             }else{
                 //cateDocEl=$(fs.readFileSync(catePath+'/'+pageMeta.cate+".html","utf8"));
                 cateDocEl=core.getDocEl(fs.readFileSync(catePath+'/'+pageMeta.cate+".html","utf8"));
-                $('<li pageid="'+pageId+'">'+pageMeta.summary+'</li>').appendTo($('#page-list',cateDocEl));
+                $(pageSummaryTpl).appendTo($('#page-list',cateDocEl));
                 //写回文件
                 //fs.writeFileSync(catePath+'/'+pageMeta.cate+".html",core.addDoctype(cateDocEl.html()),"utf8");
                 fs.writeFileSync(catePath+'/'+pageMeta.cate+".html",core.addDoctype(core.getDocHtmlStr(cateDocEl)),"utf8");
             }
             //生成新的tag或更新现有tag索引文件
             if(tagChanged){
-                pageRenderStr=ejs.render(layoutContent, {
+                pageRenderStr=ejs.render(tagTpl, {
                     page:{
-                        content:'<ul id="page-list"><li pageid="'+pageId+'">'+pageMeta.summary+'</li></ul>',
+                        content:'<ul id="page-list">'+pageSummaryTpl+'</ul>',
                         tag:tagStr,
                         cate:cateStr
                     },
@@ -247,7 +271,7 @@ var core={
             }else{
                 //tagDocEl=$(fs.readFileSync(tagPath+'/'+pageMeta.tag+".html","utf8"));
                 tagDocEl=core.getDocEl(fs.readFileSync(tagPath+'/'+pageMeta.tag+".html","utf8"));
-                $('<li pageid="'+pageId+'">'+pageMeta.summary+'</li>').appendTo($('#page-list',tagDocEl));
+                $(pageSummaryTpl).appendTo($('#page-list',tagDocEl));
                 //写回文件
                 //fs.writeFileSync(tagPath+'/'+pageMeta.tag+".html",core.addDoctype(tagDocEl.html()),"utf8");
                 fs.writeFileSync(tagPath+'/'+pageMeta.tag+".html",core.addDoctype(core.getDocHtmlStr(tagDocEl)),"utf8");
@@ -255,7 +279,7 @@ var core={
             //更新index索引文件
             //indexDocEl=$(fs.readFileSync(indexPath,"utf8"));
             indexDocEl=core.getDocEl(fs.readFileSync(indexPath,"utf8"));
-            $('<li pageid="'+pageId+'">'+pageMeta.summary+'</li>').appendTo($('#page-list',indexDocEl));
+            $(pageSummaryTpl).appendTo($('#page-list',indexDocEl));
             //写回文件
             //fs.writeFileSync(indexPath,core.addDoctype(indexDocEl.html()),"utf8");
             fs.writeFileSync(indexPath,core.addDoctype(core.getDocHtmlStr(indexDocEl)),"utf8");
@@ -268,6 +292,9 @@ var core={
         //pre config
         var config=core.preConfig(basePath);
         var layoutContent=fs.readFileSync(tplPath+'/'+config.theme+"/layout.ejs","utf8"),
+             pageTpl,    //page模板
+            cateTpl,    //分类模板
+            tagTpl, //标签模板
             metaTplData={
                 "cate":null,
                 "tag":null
@@ -298,9 +325,27 @@ var core={
                 }
             });
         }
+        
         metaTplData.cate=JSON.parse(fs.readFileSync(basePath+'/'+"cate.json","utf8"));
         metaTplData.tag=JSON.parse(fs.readFileSync(basePath+'/'+"tag.json","utf8"));
-
+        //用pageTpl模板构建page页面
+        if(fs.existsSync(tplPath+'/'+config.theme+"/page.ejs")){
+            pageTpl=fs.readFileSync(tplPath+'/'+config.theme+"/page.ejs","utf8");    
+        }else{
+            pageTpl=layoutContent;   
+        }
+        //用cateTpl模板构建cate页面
+        if(fs.existsSync(tplPath+'/'+config.theme+"/cate.ejs")){
+            cateTpl=fs.readFileSync(tplPath+'/'+config.theme+"/cate.ejs","utf8");    
+        }else{
+            cateTpl=layoutContent;   
+        }
+        //用tagTpl模板构建tag页面
+        if(fs.existsSync(tplPath+'/'+config.theme+"/tag.ejs")){
+            tagTpl=fs.readFileSync(tplPath+'/'+config.theme+"/tag.ejs","utf8");    
+        }else{
+            tagTpl=layoutContent;   
+        }
         pageMds.forEach(function(pagePath){
             //重新替换published page
             var mdContent=fs.readFileSync(pagePath,"utf8"),
@@ -319,6 +364,8 @@ var core={
                 cateDocEl,
                 tagDocEl,
                 indexDocEl;
+             //page summary template
+            var pageSummaryTpl='<li pageid="'+pageId+'"><h3 class="page-title"><a href="'+config.PAGES+'/'+curDirName+'/'+pageName+'.html'+'">'+pageMeta.title+'</a></h3><div class="page-summary">'+pageMeta.summary+'</div></li>';
             var pageItemEl,
                 catePagePaths,
                 tagPagesPaths;
@@ -347,7 +394,7 @@ var core={
                 tagStr+='<li tagid="'+item+'"><a href="'+config.TAGS+'/'+item+'.html">'+item+'</a></li>';
             });
             tagStr='<ul id="tag-list">'+tagStr+'</ul>';
-            pageRenderStr=ejs.render(layoutContent, {
+            pageRenderStr=ejs.render(pageTpl, {
                 page:{
                     content:pageContent,
                     tag:tagStr,
@@ -377,9 +424,9 @@ var core={
             }
             //生成新的cate或更新现有cate索引文件
             if(cateChanged){
-                pageRenderStr=ejs.render(layoutContent, {
+                pageRenderStr=ejs.render(cateTpl, {
                     page:{
-                        content:'<ul id="page-list"><li pageid="'+pageId+'">'+pageMeta.summary+'</li></ul>',
+                        content:'<ul id="page-list">'+pageSummaryTpl+'</ul>',
                         tag:tagStr,
                         cate:cateStr
                     },
@@ -392,7 +439,7 @@ var core={
                 //pageItemEl=$('#page-list [pageid]="'+pageName+'"',cateDocEl);
                 pageItemEl=cateDocEl.find('#page-list [pageid="'+pageId+'"]');
                 if(pageItemEl.length==0){
-                    $('<li pageid="'+pageId+'">'+pageMeta.summary+'</li>').appendTo($('#page-list',cateDocEl));
+                    $(pageSummaryTpl).appendTo($('#page-list',cateDocEl));
                     //删除原所属cate对应page item
                     catePagePaths=utils.getAllFiles(catePath).filter(function(catePagePath){
                         return catePagePath!=catePath+'/'+pageMeta.cate+".html";
@@ -414,9 +461,9 @@ var core={
             }
             //生成新的tag或更新现有tag索引文件
             if(tagChanged){
-                pageRenderStr=ejs.render(layoutContent, {
+                pageRenderStr=ejs.render(tagTpl, {
                     page:{
-                        content:'<ul id="page-list"><li pageid="'+pageId+'">'+pageMeta.summary+'</li></ul>',
+                        content:'<ul id="page-list">'+pageSummaryTpl+'</ul>',
                         tag:tagStr,
                         cate:cateStr
                     },
@@ -429,7 +476,7 @@ var core={
                 //pageItemEl=$('#page-list [pageid]="'+pageName+'"',tagDocEl);
                 pageItemEl=tagDocEl.find('#page-list [pageid="'+pageId+'"]');
                 if(pageItemEl.length==0){
-                    $('<li pageid="'+pageId+'">'+pageMeta.summary+'</li>').appendTo($('#page-list',tagDocEl));
+                    $(pageSummaryTpl).appendTo($('#page-list',tagDocEl));
                     //删除原所属cate对应page item
                     tagPagePaths=utils.getAllFiles(tagPath).filter(function(tagPagePath){
                         return tagPagePath!=tagPath+'/'+pageMeta.tag+".html";
@@ -454,7 +501,7 @@ var core={
             //pageItemEl=$('[pageid]="'+pageName+'"',indexDocEl);
             pageItemEl=indexDocEl.find('#page-list [pageid="'+pageId+'"]');
             if(pageItemEl.length>0){
-                pageItemEl.text(pageMeta.summary);
+                pageItemEl.find('.page-content').text(pageMeta.summary);
                 //写回文件
                 fs.writeFileSync(indexPath,core.addDoctype(core.getDocHtmlStr(indexDocEl)),"utf8");
             }
