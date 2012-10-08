@@ -568,8 +568,32 @@ var core={
                 }
          });
     },
-    theme:function(){
-        //TODO 自定义主题切换
+    theme:function(basePath,themeName){
+        var configPath=basePath+"/config.json",
+            cateJsonPath=basePath+"/cate.json",
+            tagJsonPath=basePath+"/tag.json",
+            checksumPath=basePath+"/checksum.json",
+            checksumJson,
+            config;
+        checksumJson=JSON.parse(fs.readFileSync(checksumPath, "utf8"));
+        config=JSON.parse(fs.readFileSync(configPath, "utf8"));
+        //设置config.json主题
+        config.theme=themeName;
+        //写回配置文件
+        fs.writeFileSync(configPath, JSON.stringify(config), "utf8");
+        //删除catetory/tag json
+        fs.existsSync(cateJsonPath)&&fs.unlinkSync(cateJsonPath);
+        fs.existsSync(cateJsonPath)&&fs.unlinkSync(tagJsonPath);
+        //reset checksum json
+        checksumJson.items.forEach(function(item){
+            item.md5="";    
+        });
+        //写回checksum json文件
+        fs.writeFileSync(checksumPath, JSON.stringify(checksumJson), "utf8");
+        //删除index.html首页索引文件
+        fs.existsSync(basePath+"/published/index.html")&&fs.unlinkSync(basePath+"/published/index.html");
+        //更新所有source文件
+        core.update(basePath);
     },
     addDoctype:function(htmlStr){
         return '<!DOCTYPE html><html>'+htmlStr+'</html>';   //<!DOCTYPE html>之间不能有空格，否则会解析错误<html>

@@ -10,4 +10,5 @@ if(args.length==0){ //默认使用当前路径
     args.push('.');
 }
 args[0]=path.resolve(args[0]);
-core[command](args.join(','));
+core[command].apply(core,args);
+//core[command](args.join(','));
