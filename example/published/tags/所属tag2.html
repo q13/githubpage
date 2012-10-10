@@ -2,17 +2,40 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <title>bootstrap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>所属tag2</title>
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width" />
+    <!-- Le styles -->
+    <link href="/theme/bootstrap/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/theme/bootstrap/bootstrap/css/bootstrap-responsive.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/theme/bootstrap/jqcloud/jqcloud.css" />
     <link rel="stylesheet" href="/theme/bootstrap/page.css" />
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]--> 
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="/theme/bootstrap/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/theme/bootstrap/jqcloud/jqcloud-1.0.2.min.js"></script>
     <script src="/theme/bootstrap/page.js"></script>
 </head>
 <body>
-<h3 id="page-cate" data-role="page-cate"><ul id="cate-list"><li cateid="test2"><a href="/cates/test2.html">test2</a></li></ul></h3>
-
-<h3 id="page-tag" data-role="page-tag"><ul id="tag-list"><li tagid="所属tag2"><a href="/tags/所属tag2.html">所属tag2</a></li><li tagid="所属tag1"><a href="/tags/所属tag1.html">所属tag1</a></li></ul></h3>
-
-<div id="page-content" data-role="page-content"><ul id="page-list"><li pageid="2012-10-05/page3"><h3 class="page-title"><a href="/pages/2012-10-05/page3.html">page标题 (暂不考虑)</a></h3><div class="page-summary">page概要 (用于cate索引页、tag索引页、index.html，做为文章的概要，不设置默认为"......")</div></li><li pageid="2012-10-05/page2"><h3 class="page-title"><a href="/pages/2012-10-05/page2.html">page标题 (暂不考虑)</a></h3><div class="page-summary">page概要 (用于cate索引页、tag索引页、index.html，做为文章的概要，不设置默认为"......")</div></li></ul></div>
+<div class="page-wrapper container-fluid">
+    <div class="row-fluid">
+        <div class="span3">
+            <h2 id="page-cate" data-role="page-cate"><ul id="cate-list"><li cateid="test2"><a href="/cates/test2.html">test2</a></li></ul></h2>
+            <div id="page-tag" data-role="page-tag"><ul id="tag-list"><li tagid="所属tag2"><a href="/tags/所属tag2.html">所属tag2</a></li><li tagid="所属tag1"><a href="/tags/所属tag1.html">所属tag1</a></li></ul></div>
+        </div>
+        <div class="span9">
+            <div id="page-content" data-role="page-content"><ul id="page-list"><li pageid="2012-10-05/page3"><h3 class="page-title"><a href="/pages/2012-10-05/page3.html">page标题 (暂不考虑)</a></h3>
+<div class="page-summary">page概要 (用于cate索引页、tag索引页、index.html，做为文章的概要，不设置默认为"......")</div>
+<div class="page-more"><a href="/pages/2012-10-05/page3.html" class="btn">查看更多</a></div></li><li pageid="2012-10-05/page2"><h3 class="page-title"><a href="/pages/2012-10-05/page2.html">page标题 (暂不考虑)</a></h3>
+<div class="page-summary">page概要 (用于cate索引页、tag索引页、index.html，做为文章的概要，不设置默认为"......")</div>
+<div class="page-more"><a href="/pages/2012-10-05/page2.html" class="btn">查看更多</a></div></li></ul></div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -103,6 +103,7 @@ var core={
             pageTpl,    //page模板
             cateTpl,    //分类模板
             tagTpl, //标签模板
+            summaryTpl, //简介模板
             metaTplData={
                 "cate":null,
                 "tag":null
@@ -151,6 +152,12 @@ var core={
         }else{
             tagTpl=layoutContent;   
         }
+        //summary模板
+        if(fs.existsSync(tplPath+'/'+config.theme+"/page-summary.ejs")){
+            summaryTpl=fs.readFileSync(tplPath+'/'+config.theme+"/page-summary.ejs","utf8");    
+        }else{
+            summaryTpl='<h3 class="page-title"><a href="<%- page.link %>"><%- page.title %></a></h3><div class="page-summary"><%- page.summary %></div>';   
+        }
         metaTplData.cate=JSON.parse(fs.readFileSync(basePath+'/'+"cate.json","utf8"));
         metaTplData.tag=JSON.parse(fs.readFileSync(basePath+'/'+"tag.json","utf8"));
         pageMds.forEach(function(pagePath){
@@ -170,7 +177,13 @@ var core={
                 indexDocEl;
             var archMdPath;
             //page summary template
-            var pageSummaryTpl='<li pageid="'+pageId+'"><h3 class="page-title"><a href="'+config.PAGES+'/'+todayDirName+'/'+pageName+'.html'+'">'+pageMeta.title+'</a></h3><div class="page-summary">'+pageMeta.summary+'</div></li>';
+            var pageSummaryTpl=ejs.render('<li pageid="'+pageId+'">'+summaryTpl+'</li>', {
+                page:{
+                    title:pageMeta.title,
+                    link:config.PAGES+'/'+todayDirName+'/'+pageName+'.html',
+                    summary:pageMeta.summary
+                }
+            });
             
             var curReadyPages=utils.getAllFiles(basePath+'/published/pages');   //现有的page
             curReadyPages=curReadyPages.concat(utils.getAllFiles(catePath));   //add cates
@@ -207,7 +220,8 @@ var core={
                 page:{
                     content:pageContent,
                     tag:tagStr,
-                    cate:cateStr
+                    cate:cateStr,
+                    title:pageMeta.title
                 },
                 BASEHREF:config.BASE,
                 THEMEHREF:config.THEME
@@ -242,7 +256,8 @@ var core={
                     page:{
                         content:'<ul id="page-list">'+pageSummaryTpl+'</ul>',
                         tag:tagStr,
-                        cate:cateStr
+                        cate:cateStr,
+                        title:pageMeta.cate
                     },
                     BASEHREF:config.BASE,
                     THEMEHREF:config.THEME
@@ -262,7 +277,8 @@ var core={
                     page:{
                         content:'<ul id="page-list">'+pageSummaryTpl+'</ul>',
                         tag:tagStr,
-                        cate:cateStr
+                        cate:cateStr,
+                        title:pageMeta.tag
                     },
                     BASEHREF:config.BASE,
                     THEMEHREF:config.THEME
@@ -295,6 +311,7 @@ var core={
              pageTpl,    //page模板
             cateTpl,    //分类模板
             tagTpl, //标签模板
+            summaryTpl, //简介模板
             metaTplData={
                 "cate":null,
                 "tag":null
@@ -346,6 +363,12 @@ var core={
         }else{
             tagTpl=layoutContent;   
         }
+        //summary模板
+        if(fs.existsSync(tplPath+'/'+config.theme+"/page-summary.ejs")){
+            summaryTpl=fs.readFileSync(tplPath+'/'+config.theme+"/page-summary.ejs","utf8");    
+        }else{
+            summaryTpl='<h3 class="page-title"><a href="<%- page.link %>"><%- page.title %></a></h3><div class="page-summary"><%- page.summary %></div>';   
+        }
         pageMds.forEach(function(pagePath){
             //重新替换published page
             var mdContent=fs.readFileSync(pagePath,"utf8"),
@@ -365,7 +388,13 @@ var core={
                 tagDocEl,
                 indexDocEl;
              //page summary template
-            var pageSummaryTpl='<li pageid="'+pageId+'"><h3 class="page-title"><a href="'+config.PAGES+'/'+curDirName+'/'+pageName+'.html'+'">'+pageMeta.title+'</a></h3><div class="page-summary">'+pageMeta.summary+'</div></li>';
+            var pageSummaryTpl=ejs.render('<li pageid="'+pageId+'">'+summaryTpl+'</li>', {
+                page:{
+                    title:pageMeta.title,
+                    link:config.PAGES+'/'+curDirName+'/'+pageName+'.html',
+                    summary:pageMeta.summary
+                }
+            });
             var pageItemEl,
                 catePagePaths,
                 tagPagesPaths;
@@ -398,7 +427,8 @@ var core={
                 page:{
                     content:pageContent,
                     tag:tagStr,
-                    cate:cateStr
+                    cate:cateStr,
+                    title:pageMeta.title
                 },
                 BASEHREF:config.BASE,
                 THEMEHREF:config.THEME
@@ -428,7 +458,8 @@ var core={
                     page:{
                         content:'<ul id="page-list">'+pageSummaryTpl+'</ul>',
                         tag:tagStr,
-                        cate:cateStr
+                        cate:cateStr,
+                        title:pageMeta.cate
                     },
                     BASEHREF:config.BASE,
                     THEMEHREF:config.THEME
@@ -465,7 +496,8 @@ var core={
                     page:{
                         content:'<ul id="page-list">'+pageSummaryTpl+'</ul>',
                         tag:tagStr,
-                        cate:cateStr
+                        cate:cateStr,
+                        title:pageMeta.tag
                     },
                     BASEHREF:config.BASE,
                     THEMEHREF:config.THEME
@@ -583,7 +615,7 @@ var core={
         fs.writeFileSync(configPath, JSON.stringify(config), "utf8");
         //删除catetory/tag json
         fs.existsSync(cateJsonPath)&&fs.unlinkSync(cateJsonPath);
-        fs.existsSync(cateJsonPath)&&fs.unlinkSync(tagJsonPath);
+        fs.existsSync(tagJsonPath)&&fs.unlinkSync(tagJsonPath);
         //reset checksum json
         checksumJson.items.forEach(function(item){
             item.md5="";    
@@ -638,10 +670,15 @@ var core={
         fs.writeFileSync(checksumPath,JSON.stringify(checksum),"utf8");
     },
     getDocEl:function(htmlStr){
-        return $(htmlStr.replace(/<script/gi,'<!--%%%<script').replace(/<\/script>/gi,'</script>%%%-->'));    
+        var filterStr=htmlStr.replace(/<script/gi,'<!--%%%<script').replace(/<\/script>/gi,'</script>%%%-->');
+        filterStr=filterStr.replace(/<\!\[endif\]-->/gi,'<!--[endif]-->');
+        return $(filterStr);    
     },
     getDocHtmlStr:function(docEl){
-        return docEl.html().replace(/<!--%%%<script/gi,'<script').replace(/<\/script>%%%-->/gi,'</script>');    
+        var cleanStr=docEl.html().replace(/<!--%%%<script/gi,'<script').replace(/<\/script>%%%-->/gi,'</script>');
+        cleanStr=cleanStr.replace(/<\!--\[endif\]-->/gi,'<![endif]-->');
+        return cleanStr;
+        //return docEl.html().replace(/<!--%%%<script/gi,'<script').replace(/<\/script>%%%-->/gi,'</script>');    
     }
 };
 

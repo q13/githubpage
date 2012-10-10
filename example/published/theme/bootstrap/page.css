@@ -1,0 +1,21 @@
+ul,li{
+    list-style-type:none;
+}
+.page-wrapper{
+    padding-top:10px;
+    padding-bottom:10px;
+}
+#page-tag{
+    height:13em;
+}
+#tag-list{
+    display:none;
+}
+#page-list li{
+    padding-bottom:0.5em;
+    border-bottom:1px dotted #cccccc;
+}
+#page-list .page-summary{
+    margin-bottom:0.5em;
+    text-indent:2em;
+}
