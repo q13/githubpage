@@ -27,7 +27,7 @@ var core={
             indexTpl;   //首页模板
         var files={
                 "dir":["source","source/"+todayDirName,"published","published/pages","published/pages/"+todayDirName,"published/cates","published/tags","published/theme"],
-                "file":["cate.json","tag.json","published/index.html","checksum.json"]
+                "file":["cate.json","tag.json","published/index.html","published/info.json","checksum.json"]
             },
             configPath=basePath+"/config.json",
             themePath=basePath+"/published/theme";
@@ -81,6 +81,8 @@ var core={
                     });
                 }else if(v=="checksum.json"){
                     fileContent='{"items":[]}';
+                }else if(v=="published/info.json"){
+                    fileContent='{}';
                 }else{
                     fileContent="&nbsp;";
                 }
@@ -177,7 +179,7 @@ var core={
                 indexDocEl;
             var archMdPath;
             //page summary template
-            var pageSummaryTpl=ejs.render('<li pageid="'+pageId+'">'+summaryTpl+'</li>', {
+            var pageSummaryTpl=ejs.render('<li class="page-item" pageid="'+pageId+'">'+summaryTpl+'</li>', {
                 page:{
                     title:pageMeta.title,
                     link:config.PAGES+'/'+todayDirName+'/'+pageName+'.html',
@@ -300,6 +302,11 @@ var core={
             //fs.writeFileSync(indexPath,core.addDoctype(indexDocEl.html()),"utf8");
             fs.writeFileSync(indexPath,core.addDoctype(core.getDocHtmlStr(indexDocEl)),"utf8");
         });
+        //添加cate和tag附加统计信息
+        core.updateCateExtInfo(catePath,basePath+'/cate.json');
+        core.updateTagExtInfo(tagPath,basePath+'/tag.json');
+        //添加发布附加信息
+        core.setInfo(basePath+'/published/info.json',basePath+'/cate.json',basePath+'/tag.json');
     },
     update:function(basePath,pageMds){
         var sourcePath=basePath+"/source",
@@ -388,7 +395,7 @@ var core={
                 tagDocEl,
                 indexDocEl;
              //page summary template
-            var pageSummaryTpl=ejs.render('<li pageid="'+pageId+'">'+summaryTpl+'</li>', {
+            var pageSummaryTpl=ejs.render('<li class="page-item" pageid="'+pageId+'">'+summaryTpl+'</li>', {
                 page:{
                     title:pageMeta.title,
                     link:config.PAGES+'/'+curDirName+'/'+pageName+'.html',
@@ -485,8 +492,10 @@ var core={
                             fs.writeFileSync(catePagePath,core.addDoctype(core.getDocHtmlStr(cateDocEl)),"utf8");
                         }
                     });
+                }else{
+                    $('.page-title a',pageItemEl).text(pageMeta.title);
+                    $('.page-summary',pageItemEl).text(pageMeta.summary);
                 }
-                pageItemEl.text(pageMeta.summary);
                 //写回文件
                 fs.writeFileSync(catePath+'/'+pageMeta.cate+".html",core.addDoctype(core.getDocHtmlStr(cateDocEl)),"utf8");
             }
@@ -523,8 +532,10 @@ var core={
                             fs.writeFileSync(tagPagePath,core.addDoctype(core.getDocHtmlStr(tagDocEl)),"utf8");
                         }
                     });
+                }else{
+                    $('.page-title a',pageItemEl).text(pageMeta.title);
+                    $('.page-summary',pageItemEl).text(pageMeta.summary);
                 }
-                pageItemEl.text(pageMeta.summary);
                 //写回文件
                 fs.writeFileSync(tagPath+'/'+pageMeta.tag+".html",core.addDoctype(core.getDocHtmlStr(tagDocEl)),"utf8");
             }
@@ -534,11 +545,17 @@ var core={
             pageItemEl=indexDocEl.find('#page-list [pageid="'+pageId+'"]');
             if(pageItemEl.length>0){
                 pageItemEl.find('.page-content').text(pageMeta.summary);
-                //写回文件
-                fs.writeFileSync(indexPath,core.addDoctype(core.getDocHtmlStr(indexDocEl)),"utf8");
+            }else{
+                $(pageSummaryTpl).appendTo($('#page-list',indexDocEl));
             }
+            //写回文件
+            fs.writeFileSync(indexPath,core.addDoctype(core.getDocHtmlStr(indexDocEl)),"utf8");
         });
-
+        //添加cate和tag附加统计信息
+        core.updateCateExtInfo(catePath,basePath+'/cate.json');
+        core.updateTagExtInfo(tagPath,basePath+'/tag.json');
+        //添加发布附加信息
+        core.setInfo(basePath+'/published/info.json',basePath+'/cate.json',basePath+'/tag.json');
     },
     remove:function(basePath,pageMds){
          var sourcePath=basePath+"/source",
@@ -599,6 +616,11 @@ var core={
                     fs.writeFileSync(indexPath,core.addDoctype(core.getDocHtmlStr(indexDocEl)),"utf8");   
                 }
          });
+         //添加cate和tag附加统计信息
+        core.updateCateExtInfo(catePath,basePath+'/cate.json');
+        core.updateTagExtInfo(tagPath,basePath+'/tag.json');
+        //添加发布附加信息
+        core.setInfo(basePath+'/published/info.json',basePath+'/cate.json',basePath+'/tag.json');
     },
     theme:function(basePath,themeName){
         var configPath=basePath+"/config.json",
@@ -679,6 +701,47 @@ var core={
         cleanStr=cleanStr.replace(/<\!--\[endif\]-->/gi,'<![endif]-->');
         return cleanStr;
         //return docEl.html().replace(/<!--%%%<script/gi,'<script').replace(/<\/script>%%%-->/gi,'</script>');    
+    },
+    updateCateExtInfo:function(catePath,cateJsonPath){
+        var cateJson=JSON.parse(fs.readFileSync(cateJsonPath, "utf8")),
+            extInfo=[];
+        var catePages=utils.getAllFiles(catePath);
+        catePages.forEach(function(catePagePath,i){
+                var pageName=path.basename(catePagePath, '.html');
+                var cateDocEl=core.getDocEl(fs.readFileSync(catePagePath,"utf8"));
+                extInfo[i]={
+                    "cateName":pageName,
+                    "pageNum":cateDocEl.find('#page-list .page-item').length
+                };
+        });
+        cateJson.extInfo=extInfo;
+        //写回json文件
+        fs.writeFileSync(cateJsonPath,JSON.stringify(cateJson),"utf8");
+    },
+    updateTagExtInfo:function(tagPath,tagJsonPath){
+        var tagJson=JSON.parse(fs.readFileSync(tagJsonPath, "utf8")),
+            extInfo=[];
+        var tagPages=utils.getAllFiles(tagPath);
+        tagPages.forEach(function(tagPagePath,i){
+                var pageName=path.basename(tagPagePath, '.html');
+                var tagDocEl=core.getDocEl(fs.readFileSync(tagPagePath,"utf8"));
+                extInfo[i]={
+                    "tagName":pageName,
+                    "pageNum":tagDocEl.find('#page-list .page-item').length
+                };
+        });
+        tagJson.extInfo=extInfo;
+        //写回json文件
+        fs.writeFileSync(tagJsonPath,JSON.stringify(tagJson),"utf8");
+    },
+    setInfo:function(infoPath,cateJsonPath,tagJsonPath){
+        var info=JSON.parse(fs.readFileSync(infoPath, "utf8")),
+            cateJson=JSON.parse(fs.readFileSync(cateJsonPath, "utf8")),
+            tagJson=JSON.parse(fs.readFileSync(tagJsonPath, "utf8"));
+        info.cate=cateJson.extInfo;
+        info.tag=tagJson.extInfo;
+        //写回info文件
+        fs.writeFileSync(infoPath,JSON.stringify(info),"utf8");
     }
 };
 

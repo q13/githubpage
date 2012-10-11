@@ -2,15 +2,27 @@
  * @author q13
  */
 jQuery(function($){
-    var tagWrapperEl=$('#page-tag');
-    var tagArr=[];
-    $('[tagid]',tagWrapperEl).each(function(i){
-        var linkEl=$('a',this);
-        tagArr[i]={
-            text: linkEl.text(), 
-            weight: 13, 
-            link: linkEl.attr('href')
-        };
+    var infoPath='/info.json';
+    $.ajax({
+        "type":"get",
+        "dataType":"json",
+        "url":infoPath,
+        "success":function(data){
+            var tagWrapperEl=$('#page-tag');
+            var tagArr=[];
+            var tagInfo=data.tag;
+            $('[tagid]',tagWrapperEl).each(function(i){
+                var linkEl=$('a',this),
+                    tagId=$(this).attr("tagid");
+                tagArr[i]={
+                    text: tagId, 
+                    weight: tagInfo.filter(function(item){
+                        return item.tagName==tagId;
+                    })[0].pageNum, 
+                    link: linkEl.attr('href')
+                };
+            });
+            tagWrapperEl.jQCloud(tagArr);   
+        }
     });
-    tagWrapperEl.jQCloud(tagArr);
 });

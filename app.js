@@ -11,8 +11,8 @@ var preConfig=require("./test/pre-config"),
     remove=require("./test/remove"),
     path=require("path");
 //preConfig.test(path.resolve("example"));
-archive.test(path.resolve("example"));
-//update.test(path.resolve("example"));
+//archive.test(path.resolve("example"));
+update.test(path.resolve("example"));
 //remove.test(path.resolve("example"));
 /*http.createServer(function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/plain'});
