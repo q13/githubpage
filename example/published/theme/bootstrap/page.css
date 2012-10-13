@@ -1,12 +1,19 @@
-ul,li{
-    list-style-type:none;
-}
 .page-wrapper{
     padding-top:10px;
     padding-bottom:10px;
 }
+#cate-list,
+#cate-list li,
+#page-list,
+#page-list .page-item{
+    list-style-type:none;
+}
+#cate-list li{
+    line-height:inherit;
+}
 #page-tag{
     height:13em;
+    border:1px dotted #cccccc;
 }
 #tag-list{
     display:none;

@@ -26,3 +26,6 @@ jQuery(function($){
         }
     });
 });
+//代码高亮
+hljs.tabReplace = '    ';
+hljs.initHighlightingOnLoad();

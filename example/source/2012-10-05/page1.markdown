@@ -9,3 +9,5 @@ summary:page概要 (用于cate索引页、tag索引页、index.html，做为文�
 * yellow
 * black1111223feffewfwefwefweewfwefewfewfff355f6
 * white2313213fewfewfwefffewfew
+
+<pre><code class="javascript">var a=1;console.log(a);</code></pre>
