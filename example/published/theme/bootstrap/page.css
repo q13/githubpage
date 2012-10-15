@@ -1,6 +1,12 @@
+body{
+    background:url(images/bg.jpg) repeat 0px 0px;
+}
 .page-wrapper{
     padding-top:10px;
     padding-bottom:10px;
+}
+.pagination-bar{
+    text-align:right;
 }
 #cate-list,
 #cate-list li,
@@ -15,12 +21,16 @@
     height:13em;
     border:1px dotted #cccccc;
 }
+#page-tag .tag-wrapper{
+    height:100%;
+}
 #tag-list{
     display:none;
 }
-#page-list li{
+#page-list .page-item{
     padding-bottom:0.5em;
     border-bottom:1px dotted #cccccc;
+    display:none;
 }
 #page-list .page-summary{
     margin-bottom:0.5em;
