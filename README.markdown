@@ -26,7 +26,7 @@
 
 e.g.删除source/2012-10-01/page1.markdown源文件，运行
 
-    githubpage --remove . 2012-10-01/page1
+    githubpage --remove . 2012-10-01/page1.markdown
 
 #### 切换主题
 
